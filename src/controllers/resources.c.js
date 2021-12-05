@@ -3,16 +3,35 @@
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
+const firebase = require('../../config/db.config');
 const jwt = require("jsonwebtoken");
 const authConfig = require("../../config/auth.config");
 
 const User = require('../models/user.m');
 
-exports.findAllSongs = function (req, res) {
-    res.send("all songs");
+exports.findAllSongs = async function (req, res) {
+  const snapshot = await firebase.collection('song').get();
+snapshot.forEach((doc) => {
+    res.status(200).send({ 
+      error: false, 
+      "songs": [
+        { "id": doc.id,
+          "name": doc.data().name,
+          "url": doc.data().url,
+          "cover":doc.data().cover,
+          "time": doc.data().time,
+          "type": doc.data().type,
+          "url": doc.data().url
+        }
+      ]
+    })
+});
 
-    // User.findAll(function (err, user) {
-    //     console.log('controller')
+
+  res.send("all songs");
+
+  // User.findAll(function (err, user) {
+  //     console.log('controller')
     //     if (err)
     //         res.send(err);
     //     console.log('res', user);

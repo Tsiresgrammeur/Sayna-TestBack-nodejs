@@ -125,7 +125,6 @@ exports.register = async function (req, res) {
 
 exports.delete = async function (req, res) {
     //var decoded = jwt_decode(req.headers.authorization);
-    console.log(Localstorage.getItem('token')) 
   
     if (Localstorage.getItem('token')) {
       try{
