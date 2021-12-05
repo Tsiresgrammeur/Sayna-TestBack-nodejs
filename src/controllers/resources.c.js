@@ -62,7 +62,6 @@ exports.findAllSongs = async function (req, res) {
 };
 
 exports.findSong = async function (req, res) {
-  Localstorage.removeItem('token')
   var songGot,songs=[];
   if(Localstorage.getItem('token'))
   {
@@ -110,8 +109,33 @@ exports.findSong = async function (req, res) {
   }
 };
 
-exports.findAllBills = function (req, res) {
-    res.send("all bills");
+exports.findAllBills = async function (req, res) {
+  var billGot,bills=[];
+    if(Localstorage.getItem('role') == "ROLE_ADMIN")
+    {
+      const snapshot = await firebase.collection('bill').get();
+      snapshot.forEach((doc) => {
+        //let createdAt= doc.data().createdAt;
+        //let dateInMillis = createdAt._seconds * 1000;
+        //var dateCreate= new Date(dateInMillis).toDateString() + ' at ' + new Date(dateInMillis).toLocaleTimeString();
+        //let updatedAt=doc.data().updatedAt;
+        //let dateInMillis2 = updatedAt._seconds * 1000;
+        //var dateUpdate= new Date(dateInMillis2).toDateString() + ' at ' + new Date(dateInMillis2).toLocaleTimeString();
+        billGot= doc.data();
+        //billGot.createdAt=dateCreate;
+        //billGot.updatedAt=dateUpdate;
+        //billGot.id=doc.id;
+        bills.push(billGot);
+      });
+        res.status(200).send({ 
+          error: false, 
+          bills
+        })
+    }
+    else
+    {
+      res.status(403).send({ error: true, "message":"Votre droit d'accès ne permet pas d'accéder à la ressource" })
+    }
 
     // User.findAll(function (err, user) {
     //     console.log('controller')
