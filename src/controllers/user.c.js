@@ -11,6 +11,9 @@ const User = require('../models/user.m');
 const firebase = require('../../config/db.config');
 const jwt_decode = require('jwt-decode');
 
+var Localstorage=require('node-localstorage').LocalStorage;
+Localstorage = new Localstorage('./scratch');
+
 var tentative = 0;
 
 exports.findAll = function (req, res) {
@@ -34,6 +37,7 @@ exports.login = async function (req, res) {
                             expiresIn: 86400 // 24 hours
                         });
                       res.status(200).send({ error: false, message: "L'utilisateur a été authentifié succès", user: doc.data(), token: token });
+                      Localstorage.setItem('token', token);
                     } else {
                       res.status(400).send({ error: true, message: 'Password incorrect' });
                     }
@@ -121,11 +125,23 @@ exports.register = async function (req, res) {
 
 exports.delete = async function (req, res) {
     //var decoded = jwt_decode(req.headers.authorization);
-    //if (decoded.role != "" || decoded.username != "" || decoded.lastname != "" || decoded.email != "") {
+    console.log(Localstorage.getItem('token')) 
+  
+    if (Localstorage.getItem('token')) {
+      try{
         const id = req.params.id;
         await firebase.collection('user').doc(id).delete();
         res.send("delete");
-    //} 
+      }
+
+      catch (error){
+        res.status(400).send(error.message);
+      }
+    } 
+  else
+  {
+    res.status(401).send({ "error":true, "message": "Votre token n\'est pas correct" })
+  }
 
  // else {
  //   res.status(401).send({ error: true, message: 'Token n\est pas correct' });
