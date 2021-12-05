@@ -38,6 +38,7 @@ exports.login = async function (req, res) {
                         });
                       res.status(200).send({ error: false, message: "L'utilisateur a été authentifié succès", user: doc.data(), token: token });
                       Localstorage.setItem('token', token);
+                      Localstorage.setItem('subscription', doc.data().abonnement);
                     } else {
                       res.status(400).send({ error: true, message: 'Password incorrect' });
                     }

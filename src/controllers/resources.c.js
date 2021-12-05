@@ -7,36 +7,54 @@ const firebase = require('../../config/db.config');
 const jwt = require("jsonwebtoken");
 const authConfig = require("../../config/auth.config");
 
+var Localstorage=require('node-localstorage').LocalStorage;
+Localstorage = new Localstorage('./scratch');
+
 const User = require('../models/user.m');
 
 exports.findAllSongs = async function (req, res) {
-  const snapshot = await firebase.collection('song').get();
-snapshot.forEach((doc) => {
-    res.status(200).send({ 
-      error: false, 
-      "songs": [
-        { "id": doc.id,
-          "name": doc.data().name,
-          "url": doc.data().url,
-          "cover":doc.data().cover,
-          "time": doc.data().time,
-          "type": doc.data().type,
-          "url": doc.data().url
-        }
-      ]
-    })
-});
+  //Localstorage.removeItem('subscription');
+  Localstorage.removeItem('token');
+  if(Localstorage.getItem('token'))
+  {
+    if(Localstorage.getItem('subscription') == "LITE")
+    {
+      const snapshot = await firebase.collection('song').get();
+      snapshot.forEach((doc) => {
+        let createdAt=doc.data().createdAt;
+        let dateInMillis = createdAt._seconds * 1000;
+        var dateCreate= new Date(dateInMillis).toDateString() + ' at ' + new Date(dateInMillis).toLocaleTimeString();
+        let updatedAt=doc.data().updatedAt;
+        let dateInMillis2 = updatedAt._seconds * 1000;
+        var dateUpdate= new Date(dateInMillis2).toDateString() + ' at ' + new Date(dateInMillis2).toLocaleTimeString();
+        res.status(200).send({ 
+          error: false, 
+          "songs": [
+            { "id": doc.id,
+              "name": doc.data().name,
+              "url": doc.data().url,
+              "cover":doc.data().cover,
+              "time": doc.data().time,
+              "createdAt": dateCreate,
+              "updatedAt": dateUpdate,
+              "type": doc.data().type
+            }
+          ]
 
+        })
+      });
+    }
+    else
+    {
+      res.status(403).send({ error: true, "message":"Votre abonnement ne permet pas d'accéder à la ressource" })
+    }
 
-  res.send("all songs");
+  }
 
-  // User.findAll(function (err, user) {
-  //     console.log('controller')
-    //     if (err)
-    //         res.send(err);
-    //     console.log('res', user);
-    //     res.send(user);
-    // });
+  else
+  {
+    res.status(401).send({ error: true, "message":"votre token n\'est pas correct" })
+  }
 };
 
 exports.findSong = function (req, res) {

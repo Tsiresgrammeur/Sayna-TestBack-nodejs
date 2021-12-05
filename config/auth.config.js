@@ -1,3 +1,3 @@
 module.exports = {
-    secret: "aina-kum-secret-key"
+    secret: "tsiresy-secret-key"
 };
