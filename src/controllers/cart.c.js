@@ -11,12 +11,13 @@ const User = require('../models/user.m');
 const firebase = require('../../config/db.config');
 const jwt_decode = require('jwt-decode');
 
+var Localstorage=require('node-localstorage').LocalStorage;
+Localstorage = new Localstorage('./scratch');
 
 exports.update = async function (req, res) {
-    var decoded = jwt_decode(req.headers.authorization);
-    if (decoded.role != "ROLE_ADMIN") {
+    if (Localstorage.getItem('role') != "ROLE_ADMIN") {
         res.status(403).send({ error: true, message: 'Vos droits d\'accès ne permettent pas d\'accéder à la ressource' });
-    } else if (decoded.role == "" || decoded.username == "" || decoded.lastname == "" || decoded.email == "") {
+    } else if (!Localstorage.getItem('token')) {
         res.status(401).send({ error: true, message: 'Token n\est pas correct' });
     } else if (req.body.cartNumber.length < 5) {
         res.status(402).send({ error: true, message: 'Informations bancaire incorrectes' });
@@ -34,7 +35,9 @@ exports.update = async function (req, res) {
         if (cardExist) {
             res.status(409).send({ error: true, message: 'La carte existe déjà' });
         } else {
-            console.log("req.params.id)", req.params.id);
+            console.log("req.params.id", req.params.id);
+            const id = req.params.id;
+            const data = req.body;
             const docRef = firebase.collection('carte').doc(req.params.id);
             await docRef.set({
                 cartNumber: req.body.cartNumber,
