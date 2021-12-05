@@ -14,7 +14,7 @@ const User = require('../models/user.m');
 
 exports.findAllSongs = async function (req, res) {
   //Localstorage.removeItem('subscription');
-  Localstorage.removeItem('token');
+  var songGot,songs=[];
   if(Localstorage.getItem('token'))
   {
     if(Localstorage.getItem('subscription') == "LITE")
@@ -27,22 +27,25 @@ exports.findAllSongs = async function (req, res) {
         let updatedAt=doc.data().updatedAt;
         let dateInMillis2 = updatedAt._seconds * 1000;
         var dateUpdate= new Date(dateInMillis2).toDateString() + ' at ' + new Date(dateInMillis2).toLocaleTimeString();
+        songGot= doc.data();
+        songGot.createdAt=dateCreate;
+        songGot.updatedAt=dateUpdate;
+        songs.push(songGot);
+        
+      });
+      //const snapshot = await firebase.collection('song').get();
+      //snapshot.forEach((doc) => {
+      //  let createdAt=doc.data().createdAt;
+      //  let dateInMillis = createdAt._seconds * 1000;
+      //  var dateCreate= new Date(dateInMillis).toDateString() + ' at ' + new Date(dateInMillis).toLocaleTimeString();
+      //  let updatedAt=doc.data().updatedAt;
+      //  let dateInMillis2 = updatedAt._seconds * 1000;
+      //  var dateUpdate= new Date(dateInMillis2).toDateString() + ' at ' + new Date(dateInMillis2).toLocaleTimeString();
         res.status(200).send({ 
           error: false, 
-          "songs": [
-            { "id": doc.id,
-              "name": doc.data().name,
-              "url": doc.data().url,
-              "cover":doc.data().cover,
-              "time": doc.data().time,
-              "createdAt": dateCreate,
-              "updatedAt": dateUpdate,
-              "type": doc.data().type
-            }
-          ]
-
+          songs
         })
-      });
+      //});
     }
     else
     {
@@ -58,8 +61,8 @@ exports.findAllSongs = async function (req, res) {
 };
 
 exports.findSong = function (req, res) {
-
     res.send("one song");
+
     // User.findAll(function (err, user) {
     //     console.log('controller')
     //     if (err)
