@@ -30,6 +30,7 @@ exports.findAllSongs = async function (req, res) {
         songGot= doc.data();
         songGot.createdAt=dateCreate;
         songGot.updatedAt=dateUpdate;
+        songGot.id=doc.id;
         songs.push(songGot);
         
       });
@@ -60,16 +61,53 @@ exports.findAllSongs = async function (req, res) {
   }
 };
 
-exports.findSong = function (req, res) {
-    res.send("one song");
+exports.findSong = async function (req, res) {
+  Localstorage.removeItem('token')
+  var songGot,songs=[];
+  if(Localstorage.getItem('token'))
+  {
+    if(Localstorage.getItem('subscription') == "LITE")
+    {
+      const snapshot = await firebase.collection('song').get();
+      snapshot.forEach((doc) => {
+        if(req.params.id == doc.id)
+        {
+          if(doc.data().type == 'mp3')
+          {
+            let createdAt=doc.data().createdAt;
+            let dateInMillis = createdAt._seconds * 1000;
+            var dateCreate= new Date(dateInMillis).toDateString() + ' at ' + new Date(dateInMillis).toLocaleTimeString();
+            let updatedAt=doc.data().updatedAt;
+            let dateInMillis2 = updatedAt._seconds * 1000;
+            var dateUpdate= new Date(dateInMillis2).toDateString() + ' at ' + new Date(dateInMillis2).toLocaleTimeString();
+            songGot= doc.data();
+            songGot.createdAt=dateCreate;
+            songGot.updatedAt=dateUpdate;
+            songGot.id=doc.id;
+            songs.push(songGot);
+            res.status(200).send({ 
+              error: false, 
+              songs
+            })
+          }
+          else
+          {
+            res.status(409).send({"message":"l'audio n'est pas accessibles"})
+          }
+        }
 
-    // User.findAll(function (err, user) {
-    //     console.log('controller')
-    //     if (err)
-    //         res.send(err);
-    //     console.log('res', user);
-    //     res.send(user);
-    // });
+      });
+    }
+    else
+    {
+      res.status(403).send({ error: true, "message":"Votre abonnement ne permet pas d'accéder à la ressource" })
+    }
+
+  }
+  else
+  {
+    res.status(401).send({ error: true, "message":"votre token n\'est pas correct" })
+  }
 };
 
 exports.findAllBills = function (req, res) {
