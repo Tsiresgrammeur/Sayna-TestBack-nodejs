@@ -60,7 +60,7 @@ app.use('/user'/*, authJwt.verifyToken*/, usersRoutes);
 // app.use('/register', usersRoutes);
 
 // for resources
-app.use('/api/r'/*, authJwt.verifyToken*/, resourcesRoutes);
+app.use('/resource'/*, authJwt.verifyToken*/, resourcesRoutes);
 // app.use('/songs', authJwt.verifyToken, resourcesRoutes);
 // app.use('/api/a', authJwt.verifyToken, resourcesRoutes);
 
