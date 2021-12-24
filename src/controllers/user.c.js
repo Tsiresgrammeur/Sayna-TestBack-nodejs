@@ -14,28 +14,27 @@ const jwt_decode = require('jwt-decode');
 var Localstorage=require('node-localstorage').LocalStorage;
 Localstorage = new Localstorage('./scratch');
 
-var tentative = 0;
+const Tentative = require('../models/tentative.m');
 
-exports.findAll = function (req, res) {
-    let user = new User("Aina", "Kum", "aina@gmail.com", "testeteste", "02/02/20", "M");
-    res.send(user);
-};
+var tentative_array = new Array();
 
 
 exports.login = async function (req, res) {
-  let found=false;
-    if (req.body.username == "" || req.body.password == "") {
-        res.status(400).send({ error: true, message: 'Email/Password manquant' });
-    } else {
-        const snapshot = await firebase.collection('user').get();
-        snapshot.forEach((doc) => {
-            if (req.body.email === doc.data().email) {
-              found=true;
-                bcrypt.compare(req.body.password, doc.data().password, function (err, res_) {
-                    if (res_) {
-                        var token = jwt.sign({ username: doc.data().username, lastname: doc.data().lastname, email: doc.data().email, }, authConfig.secret, {
-                            expiresIn: 86400 // 24 hours
-                        });
+  var wrongMailSame = false;
+  var sameError = false;
+  var tentative;
+  var booleans = new Array();
+  if (req.body.username == "" || req.body.password == "") {
+    res.status(400).send({ error: true, message: 'Email/Password manquant' });
+  } else {
+    const snapshot = await firebase.collection('user').get();
+    snapshot.forEach((doc) => {
+      if (req.body.email === doc.data().email) {
+        bcrypt.compare(req.body.password, doc.data().password, function (err, res_) {
+          if (res_) {
+            var token = jwt.sign({ username: doc.data().username, lastname: doc.data().lastname, email: doc.data().email, }, authConfig.secret, {
+              expiresIn: 86400 // 24 hours
+            });
                       res.status(200).send({ error: false, message: "L'utilisateur a été authentifié succès", user: doc.data(), token: token });
                       Localstorage.setItem('token', token);
                       Localstorage.setItem('subscription', doc.data().abonnement);
@@ -44,55 +43,88 @@ exports.login = async function (req, res) {
                       res.status(400).send({ error: true, message: 'Password incorrect' });
                     }
                 });
-
+                booleans.push(true);
+            }
+             else {
+                booleans.push(false);
             }
 
         });
-      if(!found)
-      {
-         tentative = tentative + 1;
-        if (tentative == 5) {
-          found=false;
-          tentative=0;
-          console.log("trop de tentative");
-          res.status(400).send({ error: true, message: `trop de tentative sur l'email ${req.body.email} veuillez patienter (2min)` });
-          return;
+        if (!treatBooleans(booleans)) {
+            if (tentative_array.length == 0) {
+                tentative = new Tentative(req.body.email, 1, "");
+                wrongMailSame = true;
+                sameError = true;
+            } else {
+                tentative_array.forEach((tenta) => {
+                    if (tenta.getEmail() === req.body.email) {
+                        wrongMailSame = false;
+                        if (tenta.getNbTentative() < 5) {
+                            tenta.setNbTentative((tenta.getNbTentative() + 1));
+                            sameError = true;
+                        } else {
+                            if (tenta.getToken() == "") {
+                                var token_tenta = jwt.sign({ email: tenta.getEmail(), nbTentative: tenta.getNbTentative() }, authConfig.secret, {
+                                    expiresIn: 60 // 2 minutes
+                                });
+                                let nb = (tenta.getNbTentative() + 1);
+                                tenta.setNbTentative(nb);
+                                tenta.setToken(token_tenta);
+                                sameError = false;
+                                res.status(429).send({ error: true, message: `trop de tentative sur l'email ${tenta.getEmail()} (5 - Max) - Veuillez patienter (1 - Min)` });
+                            } else {
+                                if (isTokenTentativeExpired(tenta.getToken())) {
+                                    tenta.setNbTentative(1);
+                                    tenta.setToken("");
+                                    sameError = true;
+                                } else {
+                                    var token_tenta = jwt.sign({ email: tenta.getEmail(), nbTentative: tenta.getNbTentative() }, authConfig.secret, {
+                                        expiresIn: 60 // 2 minutes
+                                    });
+                                    sameError = false;
+                                    tenta.setToken(token_tenta);
+                                    res.status(429).send({ error: true, message: `trop de tentative sur l'email ${tenta.getEmail()} (5 - Max) - Veuillez patienter (1 - Min)` });
+                                }
+                            }
+
+                        }
+                    } else {
+                        tentative = new Tentative(req.body.email, 1, "");
+                        sameError = true;
+                        wrongMailSame = true;
+                    }
+                });
+            }
+        } else {
+            wrongMailSame = true;
         }
-        res.status(400).send({ error: true, message: 'Email incorrect' });
-
-
-      }
+        var bool = await treatBooleans(booleans);
+        if (!bool) {
+            wrongMailSame ? tentative_array.push(tentative) : console.log("the same");
+        }
+        if (sameError) {
+            res.status(400).send({ error: true, message: 'Email/Password incorrect' });
+        }
+    }
 
     }
 
-    // res.send("login");
-    // const new_user = new User(req.body);
-    // if (req.body.constructor === Object && Object.keys(req.body).length === 0) {
-    //     res.status(400).send({ error: true, message: 'Please provide all required field' });
-    // } else {
-    //     User.login(new_user.username, function (err, res_match) {
-    //         if (err) {
-    //             res.send(err);
-    //         } else {
-    //             //create token
-    //             var token = jwt.sign({ id: new_user.id }, authConfig.secret, {
-    //                 expiresIn: 86400 // 24 hours
-    //             });
-    //             // Load hash from the db, which was preivously stored                 
-    //             bcrypt.compare(new_user.password, res_match[0].password, function (err, res) {
-    //                 if (res) {
-    //                     console.log("User logged");
-    //                     resLogin.status(200).send({ accessToken: token })
-    //                 } else {
-    //                     console.log("User not match");
-    //                     resLogin.status(400).send({ accessToken: "none" });
-    //                 }
-    //             });
 
-    //         }
-    //     })
+function isTokenTentativeExpired(token) {
+    const payloadBase64 = token.split('.')[1];
+    const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
+    const decoded = JSON.parse(decodedJson);
+    const exp = decoded.exp;
+    const expired = (Date.now() >= exp * 1000);
+    return expired;
+}
 
-    // }
+function treatBooleans(booleans) {
+    var bool = false;
+    for (let i = 0; i < booleans.length; i++) {
+        bool += booleans[i];
+    }
+    return bool;
 }
 
 exports.register = async function (req, res) {
