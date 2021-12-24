@@ -24,7 +24,7 @@ exports.login = async function (req, res) {
   var sameError = false;
   var tentative;
   var booleans = new Array();
-  if (req.body.username == "" || req.body.password == "") {
+  if (req.body.email == "" || req.body.password == "") {
     res.status(400).send({ error: true, message: 'Email/Password manquant' });
   } else {
     const snapshot = await firebase.collection('user').get();
@@ -32,7 +32,7 @@ exports.login = async function (req, res) {
       if (req.body.email === doc.data().email) {
         bcrypt.compare(req.body.password, doc.data().password, function (err, res_) {
           if (res_) {
-            var token = jwt.sign({ username: doc.data().username, lastname: doc.data().lastname, email: doc.data().email, }, authConfig.secret, {
+            var token = jwt.sign({ firstname: doc.data().firstname, lastname: doc.data().lastname, email: doc.data().email, }, authConfig.secret, {
               expiresIn: 86400 // 24 hours
             });
                       res.status(200).send({ error: false, message: "L'utilisateur a été authentifié succès", user: doc.data(), token: token });
@@ -63,12 +63,12 @@ exports.login = async function (req, res) {
                             tenta.setNbTentative((tenta.getNbTentative() + 1));
                             sameError = true;
                         } else {
-                            if (tenta.getToken() == "") {
-                                var token_tenta = jwt.sign({ email: tenta.getEmail(), nbTentative: tenta.getNbTentative() }, authConfig.secret, {
-                                    expiresIn: 60 // 2 minutes
-                                });
-                                let nb = (tenta.getNbTentative() + 1);
-                                tenta.setNbTentative(nb);
+                          if (tenta.getToken() == "") {
+                            var token_tenta = jwt.sign({ email: tenta.getEmail(), nbTentative: tenta.getNbTentative() }, authConfig.secret, {
+                              expiresIn: 60 // 1 minute
+                            });
+                            let nb = (tenta.getNbTentative() + 1);
+                            tenta.setNbTentative(nb);
                                 tenta.setToken(token_tenta);
                                 sameError = false;
                                 res.status(429).send({ error: true, message: `trop de tentative sur l'email ${tenta.getEmail()} (5 - Max) - Veuillez patienter (1 - Min)` });
@@ -79,7 +79,7 @@ exports.login = async function (req, res) {
                                     sameError = true;
                                 } else {
                                     var token_tenta = jwt.sign({ email: tenta.getEmail(), nbTentative: tenta.getNbTentative() }, authConfig.secret, {
-                                        expiresIn: 60 // 2 minutes
+                                        expiresIn: 60 // 1 minutes
                                     });
                                     sameError = false;
                                     tenta.setToken(token_tenta);
@@ -128,7 +128,7 @@ function treatBooleans(booleans) {
 }
 
 exports.register = async function (req, res) {
-    if (req.body.username == "" || req.body.lastname == "" || req.body.email == "" || req.body.password == "" || req.body.date_naissance == "" || req.body.sexe == "") {
+    if (req.body.firstname == "" || req.body.lastname == "" || req.body.email == "" || req.body.password == "" || req.body.date_naissance == "" || req.body.sexe == "") {
         res.status(400).send({ error: true, message: 'Une ou plusieur données obligatoires manquantes' });
     } else {
         if (!validateEmail(req.body.email) || ((req.body.sexe != "M") && (req.body.sexe != "F"))) {
@@ -144,12 +144,14 @@ exports.register = async function (req, res) {
                 hashed = await bcrypt.hash(req.body.password, salt);
                 const docRef = firebase.collection('user').doc();
                 await docRef.set({
-                    username: req.body.username,
+                    firstname: req.body.firstname,
                     lastname: req.body.lastname,
                     email: req.body.email,
                     password: hashed,
                     date_naissance: req.body.date_naissance,
-                    sexe: req.body.sexe
+                    sexe: req.body.sexe,
+                    createdAt: new Date(),
+                    updateAt: new Date()
                 });
                 res.status(201).send({ error: false, message: 'utilisateur créé avec succès' });
             }
