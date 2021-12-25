@@ -11,9 +11,6 @@ const User = require('../models/user.m');
 const firebase = require('../../config/db.config');
 const jwt_decode = require('jwt-decode');
 
-var Localstorage=require('node-localstorage').LocalStorage;
-Localstorage = new Localstorage('./scratch');
-
 const Tentative = require('../models/tentative.m');
 
 var tentative_array = new Array();
@@ -32,13 +29,13 @@ exports.login = async function (req, res) {
       if (req.body.email === doc.data().email) {
         bcrypt.compare(req.body.password, doc.data().password, function (err, res_) {
           if (res_) {
-            var token = jwt.sign({ firstname: doc.data().firstname, lastname: doc.data().lastname, email: doc.data().email, }, authConfig.secret, {
+            var token = jwt.sign({ firstname: doc.data().firstname, lastname: doc.data().lastname, email: doc.data().email,role:doc.data().role, abonnement: doc.data().abonnement }, authConfig.secret, {
+              expiresIn: 3600 // 1 hour
+            });
+            var refresh_token = jwt.sign({ firstname: doc.data().firstname, lastname: doc.data().lastname, email: doc.data().email,role:doc.data().role, abonnement: doc.data().abonnement  }, authConfig.secret, {
               expiresIn: 86400 // 24 hours
             });
-                      res.status(200).send({ error: false, message: "L'utilisateur a été authentifié succès", user: doc.data(), token: token });
-                      Localstorage.setItem('token', token);
-                      Localstorage.setItem('subscription', doc.data().abonnement);
-                      Localstorage.setItem('role', doc.data().role);
+                      res.status(200).send({ error: false, message: "L'utilisateur a été authentifié succès", user: doc.data(), access_token: token, refresh_token: refresh_token });
                     } else {
                       res.status(400).send({ error: true, message: 'Password incorrect' });
                     }

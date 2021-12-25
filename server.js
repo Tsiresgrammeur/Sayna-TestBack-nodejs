@@ -1,72 +1,22 @@
 const express = require('express');
-const usersRoutes = require('./src/routes/user.r');
-const resourcesRoutes = require('./src/routes/resources.r');
-const cartRoutes = require('./src/routes/cart.r');
-
-const authJwt = require('./src/middleware/authJwt');
-
-/*let firebase = require("firebase-admin");
-
-let serviceAccount = require("./serviceAccountKey.json");
-
-firebase.initializeApp({
-    credential: firebase.credential.cert(serviceAccount),
-    // databaseURL: "https://cart.dLs0VSkh8X0ezFrmdzjN.firebaseio.com"
-});
-
-let db = firebase.firestore();
-let ref = db.ref("restricted_access/secret_document");
-ref.once("value", function (snapshot) {
-    console.log(snapshot.val());
-});
-
-let usersRef = ref.child("users");
-usersRef.set({
-    user: {
-        firstname: "June 23, 1912",
-        lastname: "Alan Turing",
-        password: "Alan Turing",
-        email: "Alan Turing",
-        date_naissance: "Alan Turing",
-        sexe: "Alan Turing",
-    }
-});*/
-
-const cors = require('cors');
-const morgan = require('morgan');
-const bodyParser = require("body-parser");
+const router =require('./src/routes');
+const cors=require('cors');
 const app = express();
-const port = process.env.PORT || 8000;
+app.use(express.urlencoded({limit:'20MB',extended:true,parameterLimit:20000}));
 
-app.use(morgan('combined'));
+app.use(express.json());
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
-
-
+app.use(router);
+const port = process.env.PORT || 8000;
 
 // define a root route
 app.get('/', (req, res) => {
-    res.sendfile('index.html');
+    res.status(200).sendfile('index.html');
 });
 
-
-// using as middleware
-// for user
-app.use('/user'/*, authJwt.verifyToken*/, usersRoutes);
-// app.use('/login', usersRoutes);
-// app.use('/register', usersRoutes);
-
-// for resources
-app.use('/resource'/*, authJwt.verifyToken*/, resourcesRoutes);
-// app.use('/songs', authJwt.verifyToken, resourcesRoutes);
-// app.use('/api/a', authJwt.verifyToken, resourcesRoutes);
-
-// for cart
-app.use('/cart'/*, authJwt.verifyToken*/, cartRoutes);
-
+//app.get('/**', (req, res) => {
+//    res.status(404).sendfile('404.html');
+//});
 
 // listen for requests
 app.listen(port, () => {

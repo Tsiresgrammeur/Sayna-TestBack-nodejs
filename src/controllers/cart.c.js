@@ -15,9 +15,11 @@ var Localstorage=require('node-localstorage').LocalStorage;
 Localstorage = new Localstorage('./scratch');
 
 exports.update = async function (req, res) {
-    if (Localstorage.getItem('role') != "ROLE_ADMIN") {
+    var decoded = jwt_decode(req.headers.authorization);
+    console.log(decoded.role);
+    if (decoded.role != "ROLE_ADMIN") {
         res.status(403).send({ error: true, message: 'Vos droits d\'accès ne permettent pas d\'accéder à la ressource' });
-    } else if (!Localstorage.getItem('token')) {
+    } else if (decoded.role == "" || decoded.firstname == "" || decoded.lastname == "" || decoded.email == "") {
         res.status(401).send({ error: true, message: 'Token n\est pas correct' });
     } else if (req.body.cartNumber.length < 5) {
         res.status(402).send({ error: true, message: 'Informations bancaire incorrectes' });
@@ -35,10 +37,10 @@ exports.update = async function (req, res) {
         if (cardExist) {
             res.status(409).send({ error: true, message: 'La carte existe déjà' });
         } else {
-            console.log("req.params.id", req.params.id);
-            const id = req.params.id;
+            console.log("req.params.id", req.body.id);
+            const id = req.body.id;
             const data = req.body;
-            const docRef = firebase.collection('carte').doc(req.params.id);
+            const docRef = firebase.collection('carte').doc(req.body.id);
             await docRef.set({
                 cartNumber: req.body.cartNumber,
                 month: req.body.month,
@@ -49,3 +51,31 @@ exports.update = async function (req, res) {
         }
     }
 };
+
+exports.subscribe = async function (req, res) {
+  var decoded = jwt_decode(req.headers.authorization);
+  if (decoded.role != "ROLE_ADMIN") {
+    res.status(403).send({ error: true, message: 'Vos droits d\'accès ne permettent pas d\'accéder à la ressource' });
+  }
+     else if (decoded.role == "" || decoded.firstname == "" || decoded.lastname == "" || decoded.email == "") {
+        res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
+    } 
+     else if (req.body.id == '' || req.body.cvc == "") {
+        res.status(400).send({ error: true, message: 'Une ou plusieurs données obligatoire sont manquantes' });
+    }
+     else if (req.body.montant == '' || req.body.montant == 0 || req.body.montant < 30) {
+        res.status(402).send({ error: true, message: 'Echec de payment de l\'offre' });
+    }
+  else
+  {
+    if(req.body.montant == 30 || req.body.montant < 40)
+    {
+      const data = req.body;
+      const docRef = firebase.collection('carte').doc(req.body.id);
+      await docRef.set({
+        subscription: "LITE",
+      });
+      res.status(201).send({ error: false, message: 'Vos données ont été mises à jour' });
+    }
+  }
+}; 
