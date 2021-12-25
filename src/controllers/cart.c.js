@@ -15,13 +15,20 @@ var Localstorage=require('node-localstorage').LocalStorage;
 Localstorage = new Localstorage('./scratch');
 
 exports.update = async function (req, res) {
+  try
+  {
     var decoded = jwt_decode(req.headers.authorization);
-    console.log(decoded.role);
+  }
+  catch(error)
+  {
+    res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
+    return;
+  }
+    var decoded = jwt_decode(req.headers.authorization);
     if (decoded.role != "ROLE_ADMIN") {
         res.status(403).send({ error: true, message: 'Vos droits d\'accès ne permettent pas d\'accéder à la ressource' });
-    } else if (decoded.role == "" || decoded.firstname == "" || decoded.lastname == "" || decoded.email == "") {
-        res.status(401).send({ error: true, message: 'Token n\est pas correct' });
-    } else if (req.body.cartNumber.length < 5) {
+    }
+     else if (req.body.cartNumber.length < 5) {
         res.status(402).send({ error: true, message: 'Informations bancaire incorrectes' });
     } else if (req.body.month == 0 || req.body.year == 0 || req.body.defaults == "") {
         res.status(409).send({ error: true, message: 'Une ou plusieur données sont érronées' });
@@ -53,13 +60,18 @@ exports.update = async function (req, res) {
 };
 
 exports.subscribe = async function (req, res) {
-  var decoded = jwt_decode(req.headers.authorization);
+  try
+  {
+    var decoded = jwt_decode(req.headers.authorization);
+  }
+  catch(error)
+  {
+    res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
+    return;
+  }
   if (decoded.role != "ROLE_ADMIN") {
     res.status(403).send({ error: true, message: 'Vos droits d\'accès ne permettent pas d\'accéder à la ressource' });
   }
-  else if (decoded.role == "" || decoded.firstname == "" || decoded.lastname == "" || decoded.email == "") {
-    res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
-  } 
   else if (req.body.id == '' || req.body.cvc == "") {
     res.status(400).send({ error: true, message: 'Une ou plusieurs données obligatoire sont manquantes' });
   }
@@ -70,7 +82,6 @@ exports.subscribe = async function (req, res) {
   {
     const card = firebase.collection('carte').doc(req.body.id);
     const data = await card.get();
-    console.log(data.data().subcription)
     if(data.data().subcription != undefined || data.data().subscription !="")
     {
       if(req.body.montant == 30 || req.body.montant < 40)
