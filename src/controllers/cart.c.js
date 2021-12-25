@@ -57,25 +57,80 @@ exports.subscribe = async function (req, res) {
   if (decoded.role != "ROLE_ADMIN") {
     res.status(403).send({ error: true, message: 'Vos droits d\'accès ne permettent pas d\'accéder à la ressource' });
   }
-     else if (decoded.role == "" || decoded.firstname == "" || decoded.lastname == "" || decoded.email == "") {
-        res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
-    } 
-     else if (req.body.id == '' || req.body.cvc == "") {
-        res.status(400).send({ error: true, message: 'Une ou plusieurs données obligatoire sont manquantes' });
-    }
-     else if (req.body.montant == '' || req.body.montant == 0 || req.body.montant < 30) {
-        res.status(402).send({ error: true, message: 'Echec de payment de l\'offre' });
-    }
+  else if (decoded.role == "" || decoded.firstname == "" || decoded.lastname == "" || decoded.email == "") {
+    res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
+  } 
+  else if (req.body.id == '' || req.body.cvc == "") {
+    res.status(400).send({ error: true, message: 'Une ou plusieurs données obligatoire sont manquantes' });
+  }
+  else if (req.body.montant == '' || req.body.montant == 0 || req.body.montant < 30) {
+    res.status(402).send({ error: true, message: 'Echec de payment de l\'offre' });
+  }
   else
   {
-    if(req.body.montant == 30 || req.body.montant < 40)
+    const card = firebase.collection('carte').doc(req.body.id);
+    const data = await card.get();
+    console.log(data.data().subcription)
+    if(data.data().subcription != undefined || data.data().subscription !="")
     {
-      const data = req.body;
-      const docRef = firebase.collection('carte').doc(req.body.id);
-      await docRef.set({
-        subscription: "LITE",
-      });
-      res.status(201).send({ error: false, message: 'Vos données ont été mises à jour' });
+      if(req.body.montant == 30 || req.body.montant < 40)
+      {
+        await card.set({
+          subscription: "LITE",
+          cartNumber: data.data().cartNumber,
+          cvc: data.data().cvc,
+          defaults: data.data().defaults,
+          month: data.data().month,
+          year: data.data().year
+        });
+      }
+      else if(req.body.montant == 40 || req.body.montant < 50)
+      {
+        await card.set({
+          subscription: "ACCESS",
+          cartNumber: data.data().cartNumber,
+          cvc: data.data().cvc,
+          defaults: data.data().defaults,
+          month: data.data().month,
+          year: data.data().year
+        });
+      }
+      else
+      {
+        await card.set({
+          subscription: "PREMIUM",
+          cartNumber: data.data().cartNumber,
+          cvc: data.data().cvc,
+          defaults: data.data().defaults,
+          month: data.data().month,
+          year: data.data().year
+        });
+
+      }
     }
+    else
+    {
+      await card.set({
+        subscription: "LITE",
+        cartNumber: data.data().cartNumber,
+        cvc: data.data().cvc,
+        defaults: data.data().defaults,
+        month: data.data().month,
+        year: data.data().year
+      });
+
+      setTimeout(async function(){
+        await card.set({
+          subscription: "nothing",
+          cartNumber: data.data().cartNumber,
+          cvc: data.data().cvc,
+          defaults: data.data().defaults,
+          month: data.data().month,
+          year: data.data().year
+        });
+      },300000)
+    }
+
+    res.status(201).send({ error: false, message: 'Vos données ont été mises à jour' });
   }
 }; 
