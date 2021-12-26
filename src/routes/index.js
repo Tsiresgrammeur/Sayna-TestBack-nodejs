@@ -10,7 +10,7 @@ router.post('/register', userController.register);
 router.put('/subscription',cartController.subscribe)
 router.put('/user', userController.update);
 //router.delete('/user', userController.delete);
-//router.delete('/user/off', userController.logOut);
+router.delete('/user/off', userController.logOut);
 router.put('/user/cart', cartController.update);
 //router.get('/songs',siteController.searchSite);
 //router.get('/songs/:id',siteController.searchSite);

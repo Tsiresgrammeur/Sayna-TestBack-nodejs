@@ -218,17 +218,24 @@ exports.update = async function (req, res){
       const docRef = firebase.collection('user').doc(req.body.id);
       if(id != undefined && id != "")
       {
-        await docRef.set({
-          firstname: req.body.firstname,
-          lastname: req.body.lastname,
-          email: req.body.email,
-          password:req.body.password,
-          date_naissance: req.body.date_naissance,
-          sexe: req.body.sexe,
-          role: req.body.role,
-          updatedAt: new Date()
-        });
-        res.status(200).send({ error: false, message: 'Vos données ont été mises à jour' });
+        if(!validateEmail(req.body.email))
+        {
+          res.status(409).send({ error: true, message: 'Format Email non validé' });
+        }
+        else
+        {
+          await docRef.set({
+            firstname: req.body.firstname,
+            lastname: req.body.lastname,
+            email: req.body.email,
+            password:req.body.password,
+            date_naissance: req.body.date_naissance,
+            sexe: req.body.sexe,
+            role: req.body.role,
+            updatedAt: new Date()
+          });
+          res.status(200).send({ error: false, message: 'Vos données ont été mises à jour' });
+        }
       }
 
     }
@@ -246,6 +253,22 @@ exports.update = async function (req, res){
   }
 
 };
+
+exports.logOut = async function (req, res) {
+  try
+  {
+    var decoded = jwt_decode(req.headers.authorization);
+  }
+  catch(error)
+  {
+    res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
+    return;
+  }
+
+  res.status(200).send({ error: false, message: 'L\'utilisateur a été déconnecté avec succès' });
+
+};
+
 
 exports.delete = async function (req, res) {
   //var decoded = jwt_decode(req.headers.authorization);
