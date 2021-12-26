@@ -33,6 +33,17 @@ exports.update = async function (req, res) {
   else {
     let cardExist = false;
     const snapshot = await firebase.collection('carte').get();
+    let found =false;
+    snapshot.forEach((doc) => {
+      if (req.body.id == doc.id) {
+        found = true;
+      }
+    });
+    if(!found)
+    {
+      res.status(409).send({ error: true, message: 'Veuillez compléter votre profil avec une carte de crédit'});
+      return;
+    }
     snapshot.forEach((doc) => {
       if (req.body.cartNumber === doc.data().cartNumber && req.body.id != doc.id) {
         cardExist = true;
