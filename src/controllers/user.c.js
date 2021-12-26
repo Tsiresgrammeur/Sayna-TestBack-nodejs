@@ -15,7 +15,7 @@ const Tentative = require('../models/tentative.m');
 
 var tentative_array = new Array();
 
-
+// function for login
 exports.login = async function (req, res) {
   var wrongMailSame = false;
   var sameError = false;
@@ -142,6 +142,7 @@ function treatBooleans(booleans) {
   return bool;
 }
 
+//function for register
 exports.register = async function (req, res) {
   if (req.body.firstname == "" || req.body.lastname == "" || req.body.email == "" || req.body.password == "" || req.body.dateNaissance == "" || req.body.sexe == "") {
     res.status(400).send({ error: true, message: 'Une ou plusieur données obligatoires manquantes' });
@@ -190,6 +191,7 @@ exports.register = async function (req, res) {
   }
 };
 
+// function for updating
 exports.update = async function (req, res){
   try
   {
@@ -254,6 +256,7 @@ exports.update = async function (req, res){
 
 };
 
+// function for log out
 exports.logOut = async function (req, res) {
   try
   {
@@ -270,6 +273,7 @@ exports.logOut = async function (req, res) {
 };
 
 
+// function for deleting
 exports.delete = async function (req, res) {
   //var decoded = jwt_decode(req.headers.authorization);
   try
@@ -294,6 +298,7 @@ exports.delete = async function (req, res) {
 
 };
 
+// function to validate an email format
 async function checkEmail(email) {
   var isSame = false;
   const snapshot = await firebase.collection('user').get();
@@ -304,6 +309,7 @@ async function checkEmail(email) {
   });
   return isSame;
 }
+
 
 async function checkEmailAndPassword(email, password) {
   let isSame = false;
@@ -316,6 +322,7 @@ async function checkEmailAndPassword(email, password) {
   return isSame;
 }
 
+// regex for email
 function validateEmail(elementValue) {
   var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
   // console.log(emailPattern.test(elementValue));
