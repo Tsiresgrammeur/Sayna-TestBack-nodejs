@@ -12,7 +12,7 @@ router.put('/user', userController.update);
 router.delete('/user', userController.delete);
 router.delete('/user/off', userController.logOut);
 router.put('/user/cart', cartController.update);
-//router.get('/songs',songController.findAll);
-//router.get('/songs/:id',songController.findSong);
+router.get('/songs',songController.findAll);
+router.get('/songs/:id',songController.findSong);
 
 module.exports = router;
