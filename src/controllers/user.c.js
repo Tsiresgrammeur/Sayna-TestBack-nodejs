@@ -321,3 +321,5 @@ function validateEmail(elementValue) {
   // console.log(emailPattern.test(elementValue));
   return emailPattern.test(elementValue);
 }
+
+
