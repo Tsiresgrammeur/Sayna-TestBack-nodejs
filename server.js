@@ -101,9 +101,9 @@ app.get('/songs/:id', async function(req, res) {
 
 });
 
-//app.get('/**', (req, res) => {
-//    res.status(404).sendfile('404.html');
-//});
+app.get('/**', (req, res) => {
+    res.status(404).sendfile('404.html');
+});
 
 // listen for requests
 app.listen(port, () => {

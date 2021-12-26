@@ -1,48 +1,61 @@
 <!DOCTYPE html>
 <html>
 
-<head>
+  <head>
     <title>SAYNA</title>
 
-</head>
+  </head>
 
-<body>
+  <body>
     <h1> HELLO WORLD ! </h1>
     <p>
     <h2>Comment installer les dépendances</h2>
-    Pour commencer, il faut tapez le commande: "npm install" pour installer les dépendances.
-    Pour démarrer le serveur, tapez npm start
+    Tapez le commande suivant:
+    <ul>
+      <li>git clone https://github.com/Tsiresgrammeur/Sayna-TestBack-nodejs</li>
+      <li>cd Sayna-TestBack-nodejs</li>
+      <li>npm install</li>
+      <li>npm start</li>
+    </ul>
 
-    Selon la structure du code, les Urls disponibles sont les suivants:
+    Le port qui écoute les requêtes est 8000<br>
+    <h2>Concernant sur l'utilisateur</h2>
 
-    exemple
-    tsiresy@gmail.com passwd: passwd
-
-    Pour se connecter
-
-    DELETE http://localhost:8000/user/:id
-
-    Pour supprimer l'utilisateur
-    exemple: http://localhost:8000/user/Jtt75FugdzM4ee9W2kFL
-
-    POST http://localhost:8000/user/register 
-    pour inscrire un utilisateur
-
-    http://localhost:8000/resource/songs/
-
-    pour lister les audios
-
-
-    http://localhost:8000/resource/songs/:id
-    pour lister un audio spécifique
-
-    http://localhost:8000/resource/bills/
-    pour lister les factures.
+    Pour créer un compte, vous devez spécifier les attributs suivants dans "body" sous postman suivants:
+    <ul>
+      <li>firstname</li>
+      <li>lastname</li>
+      <li>email</li>
+      <li>sexe</li>
+      <li>role</li>
+      <li>dateNaissance</li>
+      <li>subscription</li>
+    </ul>
+    Le sexe c'est soit 'M' qui veut dire masculin, soit 'F' qui veut dire féminin.<br>
+    Le role sur l'utilisateur est soit "ROLE_ADMIN" qui a tous les droits soit "ROLE_USER" qui a des droits limité. <br>
+    Le format de la date de naissance est 'YYYY-MM-DD'.<br>
+    les valeurs possibles de subscription sont: "LITE","ACCESS","PREMIUM", manque de liste déroulantes, on ajoute ces valeurs manuellement <br>
 
 
-    pour intérpreter sur l'abonnement, il y a de type, Lite, de premium.
-    Il y a aussi l'utilisateur admin et utilisateur simple. 
+    Il y des utilisateurs par défaut dans la base de donnée exemple: <br>
+    email:tsiresy@gmail.com   password: passwd <br>
+
+    Pour se connecter, il faut donner l'email et le mot de passe via les attributs respectives email et password. <br> 
+    Pour supprimer un utilisateur, il faut spécifier son "id" dans "body" sous postman.
+
+    <h3>L'abonnement</h3>
+    Concernant sur l'abonnement, il faut entrer l'id du carte et le cvc. Le cvc a une convention de chaine à 3 chiffres . L'abonnement requiert un attribut 'montant' qui a pour valeur de 30 minimum, en supposant que 30 euros est le tarif minimal de l'abonnement. Si vous mettez le valeur 30 au 'montant', l'abonnement sera de type "LITE", 40 pour "ACCESS", 50 pour "PREMIUM". <br>
+    Une carte à une abonnement vide aura un abonnement PREMIUM de 5 minutes pour son premier abonnement.<br>
+    Pour tester, il y une carte vide à un id "2AM1joJknI307e3egJn4". <br>
+
+    <h2> La carte bancaire</h2>
+    L'attribut "cartNumber" doit avoir minimum 8 caractères, l'attribut "month" doit avoir la valeur entre 1 à 12.
+
+    <h2>Pour le son</h2>
+    Un utilisateur n'a pas accès au son si son type d'abonnement dans l'attribut "subscription" est de "PREMIUM"
+
+
     </p>
-</body>
+  </body>
 
 </html>
