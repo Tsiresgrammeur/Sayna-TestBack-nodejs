@@ -272,22 +272,25 @@ exports.logOut = async function (req, res) {
 
 exports.delete = async function (req, res) {
   //var decoded = jwt_decode(req.headers.authorization);
+  try
+  {
+    var decoded = jwt_decode(req.headers.authorization);
+  }
+  catch(error)
+  {
+    res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
+    return;
+  }
 
-  if (Localstorage.getItem('token')) {
     try{
-      const id = req.params.id;
+      const id = req.body.id;
       await firebase.collection('user').doc(id).delete();
-      res.send("delete");
+      res.status(200).send({ error: false, message: 'Votre compte et le compte de vos enfants ont été supprimés avec succès' });
     }
 
     catch (error){
       res.status(400).send(error.message);
     }
-  } 
-  else
-  {
-    res.status(401).send({ "error":true, "message": "Votre token n\'est pas correct" })
-  }
 
 };
 
