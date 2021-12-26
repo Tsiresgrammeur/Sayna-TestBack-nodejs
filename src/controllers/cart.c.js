@@ -11,8 +11,6 @@ const User = require('../models/user.m');
 const firebase = require('../../config/db.config');
 const jwt_decode = require('jwt-decode');
 
-var Localstorage=require('node-localstorage').LocalStorage;
-Localstorage = new Localstorage('./scratch');
 
 exports.update = async function (req, res) {
   try
@@ -27,7 +25,7 @@ exports.update = async function (req, res) {
   if (decoded.role != "ROLE_ADMIN") {
     res.status(403).send({ error: true, message: 'Vos droits d\'accès ne permettent pas d\'accéder à la ressource' });
   }
-  else if (req.body.cartNumber.length < 5) {
+  else if (req.body.cartNumber.length < 8 || parseInt(req.body.month ) < 1 || parseInt(req.body.month ) > 12) {
     res.status(402).send({ error: true, message: 'Informations bancaire incorrectes' });
   } else if (req.body.month == 0 || req.body.year == 0 || req.body.defaults == "") {
     res.status(409).send({ error: true, message: 'Une ou plusieur données sont érronées' });
@@ -36,7 +34,7 @@ exports.update = async function (req, res) {
     let cardExist = false;
     const snapshot = await firebase.collection('carte').get();
     snapshot.forEach((doc) => {
-      if (req.body.cartNumber === doc.data().cartNumber) {
+      if (req.body.cartNumber === doc.data().cartNumber && req.body.id != doc.id) {
         cardExist = true;
       }
     });
@@ -53,7 +51,7 @@ exports.update = async function (req, res) {
           cartNumber: req.body.cartNumber,
           month: req.body.month,
           year: req.body.year,
-          defaults: req.body.defaults,
+          defaults: req.body.defaults
         });
         res.status(200).send({ error: false, message: 'Vos données ont été mises à jour' });
       }
@@ -82,68 +80,45 @@ exports.subscribe = async function (req, res) {
   }
   else
   {
-    const card = firebase.collection('carte').doc(req.body.id);
+    const card = firebase.collection('subCard').doc(req.body.id);
     const data = await card.get();
+    console.log(data.data().subscription)
+    var subType;
+    if(req.body.montant == 30 || req.body.montant < 40)
+    {
+      subType="LITE";
+    }
+    else if(req.body.montant == 40 || req.body.montant < 50)
+    {
+      subType="ACCESS";
+    }
+    else
+    {
+      subType = "PREMIUM";
+    }
     if(data.data().subcription != undefined || data.data().subscription !="")
     {
-      if(req.body.montant == 30 || req.body.montant < 40)
-      {
-        await card.set({
-          subscription: "LITE",
-          cartNumber: data.data().cartNumber,
-          cvc: data.data().cvc,
-          defaults: data.data().defaults,
-          month: data.data().month,
-          year: data.data().year
-        });
-      }
-      else if(req.body.montant == 40 || req.body.montant < 50)
-      {
-        await card.set({
-          subscription: "ACCESS",
-          cartNumber: data.data().cartNumber,
-          cvc: data.data().cvc,
-          defaults: data.data().defaults,
-          month: data.data().month,
-          year: data.data().year
-        });
-      }
-      else
-      {
-        await card.set({
-          subscription: "PREMIUM",
-          cartNumber: data.data().cartNumber,
-          cvc: data.data().cvc,
-          defaults: data.data().defaults,
-          month: data.data().month,
-          year: data.data().year
-        });
-
-      }
+      await card.set({
+        subscription: subType,
+        cvc: data.data().cvc,
+      });
+      res.status(200).send({ error: false, message: 'Vos données ont été mises à jour' });
     }
     else
     {
       await card.set({
-        subscription: "LITE",
-        cartNumber: data.data().cartNumber,
+        subscription: "PREMIUM",
         cvc: data.data().cvc,
-        defaults: data.data().defaults,
-        month: data.data().month,
-        year: data.data().year
       });
+      res.status(200).send({ error: false, message: 'Votre période d\'essai viens d\'être activé - 5 min '});
 
       setTimeout(async function(){
         await card.set({
-          subscription: "nothing",
-          cartNumber: data.data().cartNumber,
+          subscription: subType,
           cvc: data.data().cvc,
-          defaults: data.data().defaults,
-          month: data.data().month,
-          year: data.data().year
         });
       },300000)
     }
 
-    res.status(201).send({ error: false, message: 'Vos données ont été mises à jour' });
   }
 }; 

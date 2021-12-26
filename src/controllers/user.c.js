@@ -47,7 +47,7 @@ exports.login = async function (req, res) {
                 lastname:doc.data().lastname,
                 email:doc.data().email,
                 sexe:doc.data().sexe,
-                dateNaissance:doc.data().date_naissance,
+                dateNaissance:doc.data().dateNaissance,
                 createdAt: dateCreate,
                 updatedAt: dateUpdate
               },
@@ -143,7 +143,7 @@ function treatBooleans(booleans) {
 }
 
 exports.register = async function (req, res) {
-  if (req.body.firstname == "" || req.body.lastname == "" || req.body.email == "" || req.body.password == "" || req.body.date_naissance == "" || req.body.sexe == "") {
+  if (req.body.firstname == "" || req.body.lastname == "" || req.body.email == "" || req.body.password == "" || req.body.dateNaissance == "" || req.body.sexe == "") {
     res.status(400).send({ error: true, message: 'Une ou plusieur données obligatoires manquantes' });
   } else {
     if (!validateEmail(req.body.email) || ((req.body.sexe != "M") && (req.body.sexe != "F"))) {
@@ -165,7 +165,7 @@ exports.register = async function (req, res) {
           role: req.body.role,
           password: hashed,
           subscription: req.body.subscription,
-          date_naissance: req.body.date_naissance,
+          dateNaissance: req.body.dateNaissance,
           sexe: req.body.sexe,
           createdAt: new Date(),
           updateAt: new Date()
@@ -178,7 +178,7 @@ exports.register = async function (req, res) {
             lastname: req.body.lastname,
             email: req.body.email,
             password: hashed,
-            dateNaissance: req.body.date_naissance,
+            dateNaissance: req.body.dateNaissance,
             sexe: req.body.sexe,
             createdAt: new Date().toDateString(),
             updateAt: new Date().toDateString(),
@@ -229,7 +229,7 @@ exports.update = async function (req, res){
             lastname: req.body.lastname,
             email: req.body.email,
             password:req.body.password,
-            date_naissance: req.body.date_naissance,
+            dateNaissance: req.body.dateNaissance,
             sexe: req.body.sexe,
             role: req.body.role,
             updatedAt: new Date()
@@ -244,7 +244,7 @@ exports.update = async function (req, res){
   try
   {
 
-    var date = new Date(req.body.date_naissance).toISOString();
+    var date = new Date(req.body.dateNaissance).toISOString();
     var datePrint=date.replace('T', " ").substring(0,10)
   }
   catch(error)
