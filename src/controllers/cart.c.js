@@ -24,39 +24,41 @@ exports.update = async function (req, res) {
     res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
     return;
   }
-    var decoded = jwt_decode(req.headers.authorization);
-    if (decoded.role != "ROLE_ADMIN") {
-        res.status(403).send({ error: true, message: 'Vos droits d\'accès ne permettent pas d\'accéder à la ressource' });
-    }
-     else if (req.body.cartNumber.length < 5) {
-        res.status(402).send({ error: true, message: 'Informations bancaire incorrectes' });
-    } else if (req.body.month == 0 || req.body.year == 0 || req.body.defaults == "") {
-        res.status(409).send({ error: true, message: 'Une ou plusieur données sont érronées' });
-    }
-    else {
-        let cardExist = false;
-        const snapshot = await firebase.collection('carte').get();
-        snapshot.forEach((doc) => {
-            if (req.body.cartNumber === doc.data().cartNumber) {
-                cardExist = true;
-            }
+  if (decoded.role != "ROLE_ADMIN") {
+    res.status(403).send({ error: true, message: 'Vos droits d\'accès ne permettent pas d\'accéder à la ressource' });
+  }
+  else if (req.body.cartNumber.length < 5) {
+    res.status(402).send({ error: true, message: 'Informations bancaire incorrectes' });
+  } else if (req.body.month == 0 || req.body.year == 0 || req.body.defaults == "") {
+    res.status(409).send({ error: true, message: 'Une ou plusieur données sont érronées' });
+  }
+  else {
+    let cardExist = false;
+    const snapshot = await firebase.collection('carte').get();
+    snapshot.forEach((doc) => {
+      if (req.body.cartNumber === doc.data().cartNumber) {
+        cardExist = true;
+      }
+    });
+    if (cardExist) {
+      res.status(409).send({ error: true, message: 'La carte existe déjà' });
+    } else {
+      console.log("req.params.id", req.body.id);
+      const id = req.body.id;
+      const data = req.body;
+      const docRef = firebase.collection('carte').doc(req.body.id);
+      if(id != undefined && id != "")
+      {
+        await docRef.set({
+          cartNumber: req.body.cartNumber,
+          month: req.body.month,
+          year: req.body.year,
+          defaults: req.body.defaults,
         });
-        if (cardExist) {
-            res.status(409).send({ error: true, message: 'La carte existe déjà' });
-        } else {
-            console.log("req.params.id", req.body.id);
-            const id = req.body.id;
-            const data = req.body;
-            const docRef = firebase.collection('carte').doc(req.body.id);
-            await docRef.set({
-                cartNumber: req.body.cartNumber,
-                month: req.body.month,
-                year: req.body.year,
-                defaults: req.body.defaults,
-            });
-            res.status(201).send({ error: false, message: 'Vos données ont été mises à jour' });
-        }
+        res.status(200).send({ error: false, message: 'Vos données ont été mises à jour' });
+      }
     }
+  }
 };
 
 exports.subscribe = async function (req, res) {

@@ -162,16 +162,89 @@ exports.register = async function (req, res) {
           firstname: req.body.firstname,
           lastname: req.body.lastname,
           email: req.body.email,
+          role: req.body.role,
           password: hashed,
+          subscription: req.body.subscription,
           date_naissance: req.body.date_naissance,
           sexe: req.body.sexe,
           createdAt: new Date(),
           updateAt: new Date()
         });
-        res.status(201).send({ error: false, message: 'utilisateur créé avec succès' });
+        res.status(201).send({ 
+          error: false,
+          message: 'utilisateur créé avec succès',
+          user: {
+            firstname: req.body.firstname,
+            lastname: req.body.lastname,
+            email: req.body.email,
+            password: hashed,
+            dateNaissance: req.body.date_naissance,
+            sexe: req.body.sexe,
+            createdAt: new Date().toDateString(),
+            updateAt: new Date().toDateString(),
+            subscription: req.body.subscription
+          },
+        });
       }
     }
   }
+};
+
+exports.update = async function (req, res){
+  try
+  {
+    var decoded = jwt_decode(req.headers.authorization);
+  }
+  catch(error)
+  {
+    res.status(401).send({ error: true, message: 'Token n\'est pas correct' });
+    return;
+  }
+  
+  if( req.body.sexe !== "F" && req.body.sexe !== "M")
+  {
+    res.status(409).send({ error: true, message: 'Une ou plusieurs données sont erronées' });
+  }
+  else
+  {
+    if(await checkEmail(req.body.email))
+    {
+      res.status(409).send({ error: true, message: 'un compte utilisant cette adresse mail est déjà enregistré' });
+    }
+    else
+    {
+      const id = req.body.id;
+      const data = req.body;
+      const docRef = firebase.collection('user').doc(req.body.id);
+      if(id != undefined && id != "")
+      {
+        await docRef.set({
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          email: req.body.email,
+          password:req.body.password,
+          date_naissance: req.body.date_naissance,
+          sexe: req.body.sexe,
+          role: req.body.role,
+          updatedAt: new Date()
+        });
+        res.status(200).send({ error: false, message: 'Vos données ont été mises à jour' });
+      }
+
+    }
+  }
+
+  try
+  {
+
+    var date = new Date(req.body.date_naissance).toISOString();
+    var datePrint=date.replace('T', " ").substring(0,10)
+  }
+  catch(error)
+  {
+    res.status(409).send({ error: true, message: 'Une ou plusieurs données sont erronées' });
+  }
+
 };
 
 exports.delete = async function (req, res) {
@@ -196,7 +269,7 @@ exports.delete = async function (req, res) {
 };
 
 async function checkEmail(email) {
-  let isSame = false;
+  var isSame = false;
   const snapshot = await firebase.collection('user').get();
   await snapshot.forEach((doc) => {
     if (email === doc.data().email) {
